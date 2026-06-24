@@ -66,3 +66,5 @@ class Flight:
         if not isinstance(other, Flight):
             return False
         return self.flight_id == other.flight_id
+
+
