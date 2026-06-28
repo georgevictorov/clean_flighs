@@ -1,7 +1,7 @@
 import sqlite3
 
 from flights.domain.model import Flight
-from flights.domain.errors import ConcurrencyError
+from flights.domain.errors import ConcurrencyError, InfrastructureError
 from flights.infrastructure.repo.sqlite.mapper import to_domain
 
 
@@ -58,16 +58,19 @@ class SqliteRepository:
         self._seen[flight.flight_id] = flight
 
     def flush(self):
-        for flight_id, flight in self._seen.items():
+        try:
+            for flight_id, flight in self._seen.items():
 
-            snapshot = self._snapshots.get(flight_id)
+                snapshot = self._snapshots.get(flight_id)
 
-            if snapshot is None:
-                self._insert(flight)
-                self._snapshots[flight_id] = flight.persistence_state
-            elif snapshot != flight.persistence_state:
-                self._update(flight)
-                self._snapshots[flight_id] = flight.persistence_state
+                if snapshot is None:
+                    self._insert(flight)
+                    self._snapshots[flight_id] = flight.persistence_state
+                elif snapshot != flight.persistence_state:
+                    self._update(flight)
+                    self._snapshots[flight_id] = flight.persistence_state
+        except sqlite3.Error as e:
+            raise InfrastructureError from e
 
     def _insert(self, flight: Flight):
 
