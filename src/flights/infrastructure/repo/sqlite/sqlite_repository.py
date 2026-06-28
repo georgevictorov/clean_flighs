@@ -18,41 +18,44 @@ class SqliteRepository:
         if flight_id in self._seen:
             return self._seen[flight_id]
 
-        flight_row = self._conn.execute(
-            """
-            select
-                flight_id,
-                status,
-                version
-            from flights
-            where
-                flight_id = ?
-            """,
-            (flight_id,),
-        ).fetchone()
+        try:
+            flight_row = self._conn.execute(
+                """
+                select
+                    flight_id,
+                    status,
+                    version
+                from flights
+                where
+                    flight_id = ?
+                """,
+                (flight_id,),
+            ).fetchone()
 
-        if flight_row is None:
-            return None
+            if flight_row is None:
+                return None
 
-        seat_rows = self._conn.execute(
-            """
-            select
-                seat_id, 
-                passenger_id
-            from seats
-            where
-                flight_id = ?
-            order by seat_id
-            """,
-            (flight_id,),
-        ).fetchall()
+            seat_rows = self._conn.execute(
+                """
+                select
+                    seat_id, 
+                    passenger_id
+                from seats
+                where
+                    flight_id = ?
+                order by seat_id
+                """,
+                (flight_id,),
+            ).fetchall()
 
-        flight = to_domain(flight_row, seat_rows)
+            flight = to_domain(flight_row, seat_rows)
 
-        self._seen[flight_id] = flight
-        self._snapshots[flight_id] = flight.persistence_state
+            self._seen[flight_id] = flight
+            self._snapshots[flight_id] = flight.persistence_state
 
-        return flight
+            return flight
+        except sqlite3.Error as e:
+            raise InfrastructureError from e
 
     def add(self, flight: Flight):
         self._seen[flight.flight_id] = flight
@@ -70,7 +73,7 @@ class SqliteRepository:
                     self._update(flight)
                     self._snapshots[flight_id] = flight.persistence_state
         except sqlite3.Error as e:
-            raise InfrastructureError from e
+            raise InfrastructureError() from e
 
     def _insert(self, flight: Flight):
 
