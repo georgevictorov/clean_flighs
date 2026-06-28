@@ -1,9 +1,10 @@
-import pytest
-import time
 import threading
+import time
 
-from flights.domain.model import Flight
+import pytest
+
 from flights.domain.errors import ConcurrencyError
+from flights.domain.model import Flight
 from flights.infrastructure.uow.sqlite.sqlite_uow import SqliteUnitOfWork
 
 
