@@ -6,9 +6,6 @@ services:
       dockerfile: Dockerfile
     image: flights-image:latest
 
-    env_file:
-      - .env
-
     ports:
       - "5005:80"
 
