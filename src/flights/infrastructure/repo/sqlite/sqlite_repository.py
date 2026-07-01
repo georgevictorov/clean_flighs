@@ -2,7 +2,7 @@ import sqlite3
 
 from flights.domain.errors import ConcurrencyError, InfrastructureError
 from flights.domain.model import Flight
-from flights.infrastructure.repo.sqlite.mapper import to_domain
+from flights.infrastructure.repo.mapper import to_domain
 
 
 class SqliteRepository:
